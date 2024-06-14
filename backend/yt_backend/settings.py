@@ -11,23 +11,30 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
 from pathlib import Path
+import configparser
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
+"""
+configparser 模組在解析包含百分號 (%) 的字串時會認為這是一個佔位符，
+所以當字串中包含 % 字元時，需要使用 configparser 的 RawConfigParser 
+類別來避免這個問題。
+"""
+# 建立設定檔解析器物件
+secret = configparser.RawConfigParser()
+secret.read(BASE_DIR / 'secret.ini')
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-_a*#oaqq_+@h_m9o%tc^$lue!jhv5yr34ll-ju^#iusdrnx#(v'
+
+SECRET_KEY = secret['django']['SECRET_KEY']
+print(f"\nSECRET_KEY=>{SECRET_KEY}\n")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
 ALLOWED_HOSTS = []
-
-
 # Application definition
 
 INSTALLED_APPS = [
@@ -73,10 +80,20 @@ WSGI_APPLICATION = 'yt_backend.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
+
+
+# 讀取資料庫設定檔
+config = configparser.ConfigParser()
+config.read(os.path.join(BASE_DIR, 'database.ini'))
+
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': config['mysql']['ENGINE'],
+        'NAME': config['mysql']['NAME'],
+        'USER': config['mysql']['USER'],
+        'PASSWORD': config['mysql']['PASSWORD'],
+        'HOST': config['mysql']['HOST'],
+        'PORT': config['mysql']['PORT'],
     }
 }
 
