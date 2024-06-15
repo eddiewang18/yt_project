@@ -29,7 +29,6 @@ secret.read(BASE_DIR / 'secret.ini')
 # SECURITY WARNING: keep the secret key used in production secret!
 
 SECRET_KEY = secret['django']['SECRET_KEY']
-print(f"\nSECRET_KEY=>{SECRET_KEY}\n")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -44,6 +43,9 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'rest_framework',
+    'basic',
+
 ]
 
 MIDDLEWARE = [
@@ -54,6 +56,15 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
+    'django.middleware.common.CommonMiddleware',
+]
+# settings.py
+CORS_EXPOSE_HEADERS = (
+'Content-Disposition',
+)
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:5173",  # Vue.js 默認的開發伺服器地址,這只是範例，實際要參照你Vue的伺服器位置
 ]
 
 ROOT_URLCONF = 'yt_backend.urls'
@@ -138,3 +149,6 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'

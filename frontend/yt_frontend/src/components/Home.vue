@@ -12,48 +12,69 @@
         </div>
     </div>
     <div class="body">
-        <div>
-            <input type="text" placeholder="請輸入Youtube連結">
-        </div>
-        <div class="button-group">
-            <button class="convertBtn">轉MP3</button>
-            <button class="convertBtn">轉MP4</button>
-        </div>
+        <form action="">
+            <div>
+                <input v-model="yt_link" type="text" placeholder="請輸入Youtube連結">
+            </div>
+            <div class="button-group">
+                <button @click.prevent="convertAudio('mp3')" class="convertBtn">轉MP3</button>
+                <button @click.prevent="convertAudio('mp4')" class="convertBtn">轉MP4</button>
+            </div>
+        </form>
+
         <div>
             <div class="sub_title">
-                為你推薦
+                本日熱門-台灣
             </div>
             <div class="recommendation">
-                <div class="music_block">
-                    <img src="https://i.ytimg.com/vi/zqKoXPHhmsM/hqdefault.jpg" alt="">
-                    <a href="https://www.youtube.com/watch?v=zqKoXPHhmsM" target="_blank">連結</a>
-                    <span class="music_title">周杰伦- 一路向北『我一路向北 离开有你的季节』 【动态歌词/Pinyin Lyrics】</span>
-                    <button>copy連結</button>
-                </div>
-                <div class="music_block">
-                    <img src="https://i.ytimg.com/vi/HwfZt7-1EHg/hqdefault.jpg" alt="">
-                    <a href="https://www.youtube.com/watch?v=bu7nU9Mhpyo" target="_blank">連結</a>
-                    <span class="music_title">周杰倫 Jay Chou (特別演出: 派偉俊)【告白氣球 Love Confession】O</span>
-                    <button>copy連結</button>
-                </div>
-                <div class="music_block">
-                    <img src="https://i.ytimg.com/vi/zqKoXPHhmsM/hqdefault.jpg" alt="">
-                    <a href="https://www.youtube.com/watch?v=zqKoXPHhmsM" target="_blank">連結</a>
-                    <span class="music_title">周杰伦- 一路向北『我一路向北 离开有你的季节』 【动态歌词/Pinyin Lyrics】</span>
-                    <button>copy連結</button>
-                </div>
-                <div class="music_block">
-                    <img src="https://i.ytimg.com/vi/zqKoXPHhmsM/hqdefault.jpg" alt="">
-                    <a href="https://www.youtube.com/watch?v=zqKoXPHhmsM" target="_blank">連結</a>
-                    <span class="music_title">周杰伦- 一路向北『我一路向北 离开有你的季节』 【动态歌词/Pinyin Lyrics】</span>
-                    <button>copy連結</button>
+                <div v-for="(item , index) in ytData.TW" class="music_block" :id="item.video_id">
+                    <img :src="item.img" alt="">
+                    <a :id="'TW@a@'+index" :href="item.video_url" target="_blank"><font-awesome-icon :icon="['fas', 'paperclip']" style="color: #ffffff;" /></a>
+                    <span class="music_title">{{item.title}}</span>
+                    <button :id="'TW@btn@'+index" @click="copyLink"><font-awesome-icon :icon="['fas', 'copy']"  style="color: #ffffff;" /></button>
                 </div>
             </div>
+            <div class="sub_title">
+                本日熱門-美國
+            </div>
+            <div class="recommendation">
+                <div v-for="(item , index) in ytData.US" class="music_block" :id="item.video_id">
+                    <img :src="item.img" alt="">
+                    <a :href="item.video_url" target="_blank"><font-awesome-icon :icon="['fas', 'paperclip']" style="color: #ffffff;" /></a>
+                    <span class="music_title">{{item.title}}</span>
+                    <button><font-awesome-icon :icon="['fas', 'copy']"  style="color: #ffffff;" /></button>
+                </div>
+            </div>
+            <div class="sub_title">
+                本日熱門-日本
+            </div>
+            <div class="recommendation">
+                <div v-for="(item , index) in ytData.JP" class="music_block" :id="item.video_id">
+                    <img :src="item.img" alt="">
+                    <a :href="item.video_url" target="_blank"><font-awesome-icon :icon="['fas', 'paperclip']" style="color: #ffffff;" /></a>
+                    <span class="music_title">{{item.title}}</span>
+                    <button><font-awesome-icon :icon="['fas', 'copy']"  style="color: #ffffff;" /></button>
+                </div>
+            </div>
+            <div class="sub_title">
+                本日熱門-南韓
+            </div>
+            <div class="recommendation">
+                <div v-for="(item , index) in ytData.KR" class="music_block" :id="item.video_id">
+                    <img :src="item.img" alt="">
+                    <a :href="item.video_url" target="_blank"><font-awesome-icon :icon="['fas', 'paperclip']" style="color: #ffffff;" /></a>
+                    <span class="music_title">{{item.title}}</span>
+                    <button><font-awesome-icon :icon="['fas', 'copy']"  style="color: #ffffff;" /></button>
+                </div>
+            </div>
+
         </div>
     </div>
 </div>
+<button @click="scrollUp" class="fab"><font-awesome-icon :icon="['fas', 'arrow-up']" style="color: #ffffff;" /></button>
 
-
+<div id="loadingMsg" class="hide">請稍後，正在轉檔中...</div>
+<modal :msg="msg" :dynamicStatusClass :successFlag="successFlag" ref="msgModal"></modal>
 </template>
 
 
@@ -64,6 +85,113 @@ export default {
 </script>
 
 <script setup>
+import axios from 'axios'
+import { ref , reactive } from 'vue'
+import modal from './modal.vue'
+
+let yt_link = ref(""); // 輸入的youtube連結
+let msgModal = ref(null); // 指向 modal組件
+let msg = ref(""); // modal 訊息
+let dynamicStatusClass = ref("");
+let successFlag = ref("");
+const api_url = "http://127.0.0.1:8000/basic/home/";
+let ytData = reactive({});
+// Youtube轉檔
+async function convertAudio(fileType) {
+    if (yt_link.value.length === 0) { 
+        msg.value = "youtube連結 不可空白"
+        dynamicStatusClass.value = 'fail';
+        successFlag.value = false;
+        msgModal.value.myModal_show();
+        return;
+    }
+    let loadingMsg = document.getElementById("loadingMsg");
+    console.log("=======convertAudio=======")
+    loadingMsg.classList.remove("hide");
+    loadingMsg.classList.add("show");
+    
+    let req_data = {
+        yt_link: yt_link.value,
+        fileType:fileType
+    }
+    try {
+        const response = await axios.post(api_url, req_data, { responseType: 'blob' });
+        console.log("response ======> ok")
+        console.log(response)
+        // 當接收到前端回傳的檔案時，進行瀏覽器自動下載的動作
+        // 當接收到前端回傳的檔案時，進行瀏覽器自動下載的動作
+        const contentDisposition = response.headers['content-disposition'];
+        const fileName = contentDisposition.split('filename=')[1].replace(/"/g, '');
+        const url = window.URL.createObjectURL(new Blob([response.data]));
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', fileName);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        loadingMsg.classList.remove("show");
+        loadingMsg.classList.add("hide");
+    } catch (error) {
+        console.log("error=>" + error);
+        loadingMsg.classList.remove("show");
+        loadingMsg.classList.add("hide");
+        msg.value = "請檢查youtube連結是否正確"
+        dynamicStatusClass.value = 'fail';
+        successFlag.value = false;
+        msgModal.value.myModal_show();
+    }
+    
+    
+}
+    
+async function getData() {
+    try {
+        const response = await axios.get(api_url)
+        Object.assign(ytData, response.data);
+    } catch (error) {
+        console.log(error);
+    }
+}
+
+getData()
+
+function copyLink(e) {
+    let btn_ele = null;
+    console.log("target=>"+e.target.tagName)
+    if (e.target.tagName.toLowerCase() === 'path') {
+        btn_ele = e.target.parentNode.parentNode;
+    }
+    else if (e.target.tagName.toLowerCase() === 'svg') {
+        btn_ele = e.target.parentNode;
+    } else if (e.target.tagName.toLowerCase() === 'button') {
+        btn_ele = e.target;
+    }
+    console.log("tagName =>"+btn_ele)
+    let btn_id = btn_ele.id;
+    if (btn_id != undefined && btn_id != null) {
+        let id_data_list = btn_id.split("@");
+        let a_id = id_data_list[0] + "@a@" + id_data_list[2];
+        let a_ele = document.getElementById(a_id);
+        let textToCopy = a_ele.href.trim();
+        console.log('textToCopy==>'+textToCopy)
+        // 創建一個臨時的textarea元素來複製文字
+        var tempTextarea = document.createElement('textarea');
+        tempTextarea.value = textToCopy;
+        document.body.appendChild(tempTextarea);
+        
+        // 選擇並複製文字
+        tempTextarea.select();
+        document.execCommand('copy');
+        
+        // 刪除臨時元素
+        document.body.removeChild(tempTextarea);
+    }
+}
+
+// 網頁回到頂部
+function scrollUp(params) {
+    window.scrollTo(0,0)
+}
 
 </script>
 
@@ -290,4 +418,55 @@ body, html {
     padding: 10px; /* 添加內邊距 */
 }
 
+/* 等候訊息樣式 */
+#loadingMsg {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: rgba(0, 0, 0, 0.8);
+    color: #fff;
+    padding: 10px 20px;
+    border-radius: 5px;
+    font-size: 16px;
+    animation: bounce 1s infinite alternate; /* 增加上下跳動的動畫效果 */
+}
+
+@keyframes bounce {
+    0% {
+        transform: translateY(0);
+    }
+    100% {
+        transform: translateY(-5px);
+    }
+}
+
+
+.hide{
+    display: none;
+}
+
+.show{
+    display: block;
+}
+
+/* fab按鈕 */
+.fab {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background-color: #4267B2;
+    color: #fff;
+    border: none;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 30px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    cursor: pointer;
+    z-index: 1000;
+}
 </style>
