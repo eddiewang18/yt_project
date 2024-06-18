@@ -1,7 +1,7 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from .utils import download_and_convert_youtube_video
+from utils.utils import download_and_convert_youtube_video
 import os
 from django.http import FileResponse
 from django.utils.encoding import escape_uri_path

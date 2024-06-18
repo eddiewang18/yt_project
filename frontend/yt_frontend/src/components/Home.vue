@@ -6,8 +6,9 @@
             在線Youtube轉mp3、mp4
         </div>
         <div class="userblock">
+            
             <button class="account-btn">
-                登入
+                <RouterLink to="/login">登入</RouterLink>
             </button>
         </div>
     </div>
@@ -469,4 +470,10 @@ body, html {
     cursor: pointer;
     z-index: 1000;
 }
+
+a{
+    text-decoration: none;
+    color: white;
+}
+
 </style>
