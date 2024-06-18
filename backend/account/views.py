@@ -25,54 +25,81 @@ from django.shortcuts import redirect
 
 User = get_user_model()
 
+def get_jwt_token(user,exp_time:int):
+    """
+    user -> django user model 模型
+    exp_time -> 過期時間
+    """
+    expiration = datetime.utcnow() + timedelta(minutes=exp_time)  # 設置JWT過期時間為5分鐘後
+    token = jwt.encode({
+        'user_id': user.pk,
+        'exp': expiration,
+    }, settings.SECRET_KEY, algorithm='HS256') # 使用HS256算法編碼JWT
+    return token
+
+def sendVerifyMail2User(user,url,emailTemplatePath,emailTitle,request):
+    """
+    寄給使用者的驗證信
+    user -> User模型
+    url -> request 的 URL
+    emailTemplatePath -> email html 模板所在的路徑
+    emailTitle -> 電子郵件標題
+    """
+    token = get_jwt_token(user,5) # 取得 JWT token
+
+    # 使用 urlsafe_base64_encode 將用戶的主鍵（user.pk）轉換成 URL 安全的 Base64 編碼，以便在驗證郵件中使用。
+    uid = urlsafe_base64_encode(force_bytes(user.pk))
+
+    # build_absolute_uri 創建完整的啟動帳號的連結，其中包含了用戶的編碼主鍵和 JWT token。
+    activation_link = request.build_absolute_uri(
+        f'/{url}{uid}/{token}/'
+    )
+    # 電子郵件內容樣板
+    email_template = render_to_string(
+        emailTemplatePath,
+        {
+            'username': user.username,
+            'activation_link':activation_link
+        }
+    )
+
+    email = EmailMessage(
+        emailTitle,  # 電子郵件標題
+        email_template,  # 電子郵件內容
+        settings.EMAIL_HOST_USER,  # 寄件者
+        [user.email]  # 收件者
+    )
+
+    email.fail_silently = False
+    email.content_subtype = "html"  
+    email.send()
+
+
 class RegisterView(APIView):
 	# 設置 permission_classes 為 [AllowAny]，表示該視圖允許任何人訪問，即未驗證的用戶也可以使用這個視圖進行註冊操作。
     permission_classes = [AllowAny]
-
+    mail_template = 'accounts/verify_email.html'
+    mail_url = 'account/activate/'
+    mail_title = 'Yt2MP3_MP4註冊驗證'
     def post(self,request):
         serializer = MyUserSerializer(data = request.data)
         if serializer.is_valid():
             user = serializer.save()
-            token = self.get_jwt_token(user) # 取得 JWT token
-
-            # 使用 urlsafe_base64_encode 將用戶的主鍵（user.pk）轉換成 URL 安全的 Base64 編碼，以便在驗證郵件中使用。
-            uid = urlsafe_base64_encode(force_bytes(user.pk))
-
-            # build_absolute_uri 創建完整的啟動帳號的連結，其中包含了用戶的編碼主鍵和 JWT token。
-            activation_link = request.build_absolute_uri(
-                f'/account/activate/{uid}/{token}/'
-            )
-            # 電子郵件內容樣板
-            email_template = render_to_string(
-                'accounts/verify_email.html',
-                {
-                    'username': user.username,
-                    'activation_link':activation_link
-                }
-            )
-
-            email = EmailMessage(
-                'Yt2MP3_MP4註冊驗證',  # 電子郵件標題
-                email_template,  # 電子郵件內容
-                settings.EMAIL_HOST_USER,  # 寄件者
-                [user.email]  # 收件者
-            )
-
-            email.fail_silently = False
-            email.content_subtype = "html"  
-            email.send()                 
-
+            sendVerifyMail2User(user,RegisterView.mail_url,RegisterView.mail_template,RegisterView.mail_title,request)    
             return Response({'is_send':'true','detail':'Verification email sent.',"email":user.email},status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    def get_jwt_token(self, user):
-        expiration = datetime.utcnow() + timedelta(minutes=5)  # 設置JWT過期時間為5分鐘後
-        token = jwt.encode({
-            'user_id': user.pk,
-            'exp': expiration,
-        }, settings.SECRET_KEY, algorithm='HS256') # 使用HS256算法編碼JWT
-        return token
-
+    def put(self,request):
+        email = request.data.get("email",None)
+        if not email:
+            return Response({"error":"無效的email"},status=HTTP_400_BAD_REQUEST)
+        try :
+            user = User.objects.get(pk=email)  # 根據用戶ID查詢用戶
+            if user.is_active == True:
+                return Response({"msg":"帳戶已開通","is_active":"true"},status=status.HTTP_201_CREATED)
+            sendVerifyMail2User(user,RegisterView.mail_url,RegisterView.mail_template,RegisterView.mail_title,request)
+            return Response({"is_active":"false",'is_send':'true','detail':'Verification email sent.',"email":user.email},status=status.HTTP_201_CREATED)
+        except User.DoesNotExist :
+            return Response({'error':"無效的帳號"},status=HTTP_400_BAD_REQUEST)
 
 class ActivateAccountView(APIView):
     permission_classes = [AllowAny]
