@@ -1,14 +1,19 @@
 <template>
-
+    <div class="head_icon"><RouterLink to="/"><font-awesome-icon :icon="['fas', 'house']" class="fa-2x" style="color: #6099fb;" /></RouterLink> </div>
+    <span v-if="loginStatus" class="username">{{ username }}</span>
 <div class="container">
+
     <div class="header">
+
         <div class="title">
             在線Youtube轉mp3、mp4
         </div>
         <div class="userblock">
-            
-            <button class="account-btn">
+            <button v-if="!loginStatus" class="account-btn">
                 <RouterLink to="/login">登入</RouterLink>
+            </button>
+            <button v-else @click="logout" class="account-btn">
+                登出
             </button>
         </div>
     </div>
@@ -89,6 +94,8 @@ export default {
 import axios from 'axios'
 import { ref , reactive } from 'vue'
 import modal from './modal.vue'
+import { useRouter } from 'vue-router'
+
 
 let yt_link = ref(""); // 輸入的youtube連結
 let msgModal = ref(null); // 指向 modal組件
@@ -97,6 +104,15 @@ let dynamicStatusClass = ref("");
 let successFlag = ref("");
 const api_url = "http://127.0.0.1:8000/basic/home/";
 let ytData = reactive({});
+const router = useRouter();
+getData()
+
+let loginStatus = ref(localStorage.getItem("login"))
+let access_token = localStorage.getItem("access_token")
+let username = ref("");
+if (access_token != null && getUsernameFromToken(access_token) != null) { 
+    username.value = getUsernameFromToken(access_token)[0]
+}
 // Youtube轉檔
 async function convertAudio(fileType) {
     if (yt_link.value.length === 0) { 
@@ -154,7 +170,6 @@ async function getData() {
     }
 }
 
-getData()
 
 function copyLink(e) {
     let btn_ele = null;
@@ -192,6 +207,45 @@ function copyLink(e) {
 // 網頁回到頂部
 function scrollUp(params) {
     window.scrollTo(0,0)
+}
+
+// 登出
+
+function logout() {
+    console.log('logout')
+    localStorage.removeItem('login')
+    localStorage.removeItem('access_token')
+    localStorage.removeItem('refresh_token')
+    loginStatus.value = false;
+    msg.value = '登出成功'
+    dynamicStatusClass = 'success'
+    successFlag.value = true;
+    msgModal.value.myModal_show();
+    setTimeout(() => {
+        msgModal.value.myModal_hide();
+        router.push("/")
+    }, 800);
+    
+}
+
+function parseJwt(token) {
+  try {
+    const base64Url = token.split('.')[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+      return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+    }).join(''));
+
+    return JSON.parse(jsonPayload);
+  } catch (e) {
+    console.error('Invalid JWT token', e);
+    return null;
+  }
+}
+
+function getUsernameFromToken(token) {
+  const payload = parseJwt(token);
+  return payload ? payload.username : null;
 }
 
 </script>
@@ -476,4 +530,27 @@ a{
     color: white;
 }
 
+span.username{
+    margin: 0px 30px 0px 0px;
+    background-color: rgb(213, 29, 103);
+    padding: 20px;
+    color: #ffffff;
+    font-size: 20px;
+
+    border-radius: 50%;
+}
+.head_icon{
+    margin: 10px 20px 0px 10px;
+}
+
+.username{
+    background-color: rgb(213, 29, 103);
+    padding: 20px;
+    color: #ffffff;
+    font-size: 16px;
+    border-radius: 50%;
+    position: absolute;
+    right: 0px;
+    top: 10px;
+}
 </style>

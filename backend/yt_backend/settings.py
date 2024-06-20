@@ -46,6 +46,8 @@ INSTALLED_APPS = [
     'rest_framework',
     'basic',
     'account',
+    'rest_framework_simplejwt',
+
 
 ]
 
@@ -164,3 +166,27 @@ EMAIL_PORT = 587  #TLS通訊埠號
 EMAIL_USE_TLS = True  #開啟TLS(傳輸層安全性)
 EMAIL_HOST_USER = 'eddiewang880215@gmail.com'  #寄件者電子郵件
 EMAIL_HOST_PASSWORD = 'mqmhlsszworiiafn'  #Gmail應用程式的密碼
+
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ],
+}
+
+from datetime import timedelta
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60), # 設置存取令牌（access token）的有效期限為5分鐘
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=1), # 設置刷新令牌（refresh token）的有效期限為1天後過期。
+    'ROTATE_REFRESH_TOKENS': False, # 是否在每次使用刷新令牌時發放新的刷新令牌。
+    'BLACKLIST_AFTER_ROTATION': True, # 是否在發放新刷新令牌後將舊的刷新令牌列入黑名單。
+    'ALGORITHM': 'HS256', # 用於簽名和驗證 JWT 的加密演算法，使用 HMAC-SHA256 演算法。
+    'SIGNING_KEY': SECRET_KEY, # 於簽名 JWT 的密鑰。這是一個非常重要的安全參數，應該使用強密鑰並保密。
+    'VERIFYING_KEY': None, # 用於驗證 JWT 的密鑰。如果使用非對稱加密（如 RS256），需要設置此參數。
+    'AUTH_HEADER_TYPES': ('Bearer',), # 指定 HTTP 認證頭的類型。
+    'USER_ID_FIELD': 'email', #  指定用戶模型中用於標識用戶的欄位。
+    'USER_ID_CLAIM': 'email', # 指定 JWT 中用於保存用戶 ID 的聲明。
+    'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken',), # 指定使用的 JWT 類型。
+    'TOKEN_TYPE_CLAIM': 'token_type',  # 指定 JWT 中用於保存令牌類型的聲明。
+}

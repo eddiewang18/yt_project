@@ -9,9 +9,11 @@ import configparser
 from django.conf import settings
 from .youtube import YoutubeData
 
+
 class HomeView(APIView):
     
     def get(self,request):
+        print(f'\nlogin:{request.user.is_authenticated}\n')
         response_yt_data = {
             "TW":[],
             "US":[],
@@ -69,3 +71,4 @@ def file_iterator(file_name, chunk_size=512):
             yield chunk
     # 删除文件
     os.remove(file_name)
+

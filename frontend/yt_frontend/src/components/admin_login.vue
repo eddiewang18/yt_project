@@ -3,7 +3,7 @@
         <div class="header">
             <div class="title">
                 <!--這裡是標題，可以的話幫我設計新穎的樣式-->
-                登入YT2MP32MP4
+                登入YT2MP32MP4 後台
             </div>
         </div>
         <div class="body">
@@ -48,7 +48,7 @@
 
 <script>
 export default {
-    name:"login"
+    name:"Admin_login"
 }
 </script>
 <script setup>
@@ -98,12 +98,12 @@ function showPwdFn(e) {
 async function login() {
     let response = {}
     try {
-        response = await axios.post("http://127.0.0.1:8000/account/login/", form);
+        response = await axios.post("http://127.0.0.1:8000/account/admin/login/", form);
         console.log("response")
         console.log(response)
-        localStorage.setItem('access_token', response.data.access);
-        localStorage.setItem('refresh_token', response.data.refresh);
-        localStorage.setItem('login', true);
+        localStorage.setItem('access_token_admin', response.data.access);
+        localStorage.setItem('refresh_token_admin', response.data.refresh);
+        localStorage.setItem('login_admin', true);
 
         msg.value = "登入成功";
         successFlag.value = true;
@@ -111,7 +111,7 @@ async function login() {
         msgModal.value.myModal_show();
         setTimeout(() => {
             msgModal.value.myModal_hide();
-            router.push("/")
+            router.push("/admin/home")
         }, 800);    
         
     } catch (error) {

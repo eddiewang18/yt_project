@@ -22,6 +22,9 @@ from django.conf import settings
 from django.core.mail import EmailMessage
 from django.shortcuts import redirect
 
+from rest_framework_simplejwt.views import TokenObtainPairView
+from rest_framework.permissions import AllowAny
+from .serializers import LoginObtainPairSerializer,StaffTokenObtainPairSerializer
 
 User = get_user_model()
 
@@ -107,9 +110,7 @@ class ActivateAccountView(APIView):
         try:
         # 使用 force_str 和 urlsafe_base64_decode 將 uidb64 解碼為實際的用戶主鍵。
             uid = force_str(urlsafe_base64_decode(uidb64))  
-            
             user = User.objects.get(pk=uid)  # 根據用戶ID查詢用戶
-            
             # 使用 jwt.decode 解碼 JWT token，並檢查其中的 user_id 是否與查詢到的用戶主鍵相符，確保驗證的有效性。
             payload = jwt.decode(token, settings.SECRET_KEY, algorithms=['HS256'])  # 解碼JWT token
             if user.pk != payload['user_id']:  # 檢查用戶ID是否與token中的ID一致
@@ -122,3 +123,12 @@ class ActivateAccountView(APIView):
         # return Response({'detail': 'Account activated successfully'}, status=status.HTTP_200_OK)
         return redirect("http://localhost:5173/finish")       
 
+# 自訂使用者jwt登入View
+class LoginObtainPairView(TokenObtainPairView):
+    permission_classes = (AllowAny,)
+    serializer_class = LoginObtainPairSerializer
+
+# 後台使用者jwt登入View
+class StaffTokenObtainPairView(TokenObtainPairView):
+    permission_classes = (AllowAny,)
+    serializer_class = StaffTokenObtainPairSerializer

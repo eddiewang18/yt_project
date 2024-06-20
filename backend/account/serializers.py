@@ -1,5 +1,6 @@
 from .models import MyUser
 from rest_framework import serializers
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 
 class MyUserSerializer(serializers.ModelSerializer):
@@ -30,3 +31,35 @@ class MyUserSerializer(serializers.ModelSerializer):
             instance.set_password(password)
         instance.save()
         return instance
+
+class LoginObtainPairSerializer(TokenObtainPairSerializer):
+    @classmethod
+    def get_token(cls, user):
+        token = super().get_token(user)
+
+        # 添加额外信息
+        token['username'] = user.username
+        return token
+
+class StaffTokenObtainPairSerializer(TokenObtainPairSerializer):
+    def validate(self, attrs):
+        data = super().validate(attrs)
+        user = self.user
+
+        if not user.is_staff:
+            raise serializers.ValidationError('User is not staff')
+
+        refresh = self.get_token(user)
+        data['refresh'] = str(refresh)
+        data['access'] = str(refresh.access_token)
+
+
+        return data
+
+    @classmethod
+    def get_token(cls, user):
+        token = super().get_token(user)
+
+        # 添加额外信息
+        token['username'] = user.username
+        return token

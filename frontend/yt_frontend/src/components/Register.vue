@@ -309,6 +309,8 @@ async function register() {
         console.log(response)
         msg.value = "錯誤";
         dynamicStatusClass.value = "fail";
+        loadingMsg.classList.remove("show");
+        loadingMsg.classList.add("hide");
         msgModal.value.myModal_show();
     }
     

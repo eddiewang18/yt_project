@@ -12,15 +12,47 @@
             <span class="qmsg">
                 未收到驗證信?
             </span>
-            <button class="field_btn">重新寄信</button>
+            <button @click="reSendMail" class="field_btn">重新寄信</button>
         </div>
     </div>
+    <div id="loadingMsg" class="hide">系統已重新寄出驗證信，請稍後...</div>
+
 </template>
 
 <script>
 export default {
     name:"EmailSend"
 }
+</script>
+
+<script setup>
+import { useRoute } from 'vue-router';
+import axios from 'axios'
+const route = useRoute();
+let resend_email = route.params.email;
+
+async function reSendMail() {
+    try {
+        let loadingMsg = document.getElementById("loadingMsg");
+        loadingMsg.classList.remove("hide");
+        loadingMsg.classList.add("show");
+        let api_url = "http://127.0.0.1:8000/account/register/";
+        let response = await axios.put(api_url, { "email": resend_email })
+        let email = response.data.email
+        let is_active = response.data.is_active;
+        if (is_active == 'false') {
+            loadingMsg.classList.remove("show");
+            loadingMsg.classList.add("hide");
+            window.location.href = `http://localhost:5173/sendMail/${email}`;            
+        } else if (is_active == 'true') {
+            window.location.href = `http://localhost:5173/finish/`;  
+        }
+
+    } catch (error) {
+        console.log(error)
+    }
+}
+
 </script>
 
 <style scoped>
@@ -104,6 +136,27 @@ body {
 
 .body .field_btn:hover {
     background: #e94b67;
+}
+
+#loadingMsg {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: rgba(0, 0, 0, 0.8);
+    color: #fff;
+    padding: 10px 20px;
+    border-radius: 5px;
+    font-size: 16px;
+    animation: bounce 1s infinite alternate; /* 增加上下跳動的動畫效果 */
+}
+
+.hide{
+    display: none;
+}
+
+.show{
+    display: block;
 }
 
 </style>
