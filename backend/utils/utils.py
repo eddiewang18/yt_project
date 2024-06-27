@@ -10,8 +10,11 @@ def download_and_convert_youtube_video(video_url, filetype):
     try:
         # 下載YouTube影片
         yt = YouTube(video_url)
-        stream = yt.streams.filter(progressive=True, file_extension='mp4').first()
-        video_filename = stream.download()
+        streams = yt.streams.filter(progressive=True, file_extension='mp4')
+        # 選擇最高解析度的流進行下載
+        streams = streams.order_by('resolution').desc()
+        # 下載影片
+        video_filename = streams[0].download()
 
         # 根據filetype進行轉換
         if filetype == 'mp4':

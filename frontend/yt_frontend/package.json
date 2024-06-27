@@ -18,7 +18,9 @@
     "bootstrap": "^5.3.3",
     "bootstrap-icons": "^1.11.3",
     "bootstrap-vue": "^2.23.1",
+    "chart.js": "^4.4.3",
     "vue": "^3.4.21",
+    "vue-chartjs": "^5.3.1",
     "vue-router": "^4.3.3"
   },
   "devDependencies": {

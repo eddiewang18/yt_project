@@ -19,6 +19,8 @@ import { faEye } from '@fortawesome/free-solid-svg-icons';
 import { faEyeSlash } from '@fortawesome/free-solid-svg-icons';
 import { faPaperPlane } from '@fortawesome/free-solid-svg-icons';
 import { faHouse } from '@fortawesome/free-solid-svg-icons';
+import { faCaretRight } from '@fortawesome/free-solid-svg-icons';
+import { faCaretLeft } from '@fortawesome/free-solid-svg-icons';
 
 library.add(faCircleCheck)
 library.add(faCircleXmark)
@@ -29,6 +31,8 @@ library.add(faEye)
 library.add(faEyeSlash)
 library.add(faPaperPlane)
 library.add(faHouse)
+library.add(faCaretRight)
+library.add(faCaretLeft)
 const app = createApp(App);
 
 // 注册FontAwesome组件

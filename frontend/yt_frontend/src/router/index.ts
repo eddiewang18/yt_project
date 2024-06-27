@@ -7,6 +7,7 @@ import EmailSend from '@/components/emailSend.vue'
 import Admin_login from '@/components/admin_login.vue'
 import Admin_home from '@/components/admin_home.vue'
 import AdminDataAnalasis from '@/components/AdminDataAnalasis.vue'
+import Yt_analysis from '@/components/Yt_analysis.vue'
 
 // const router = createRouter(
 //     {
@@ -84,6 +85,10 @@ const router = createRouter(
                     {
                         path: "data_analasis",
                         component:AdminDataAnalasis
+                    },
+                    {
+                        path: "analysis01",
+                        component:Yt_analysis
                     }
                 ]
             }

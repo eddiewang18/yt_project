@@ -1,5 +1,5 @@
 from googleapiclient.discovery import build
-
+import re
 
 class YoutubeData():
     regionCode = ('US','CA','JP','KR','TW','CN','GB','DR','FR','AU','IN','RU','TW')
@@ -43,3 +43,47 @@ class YoutubeData():
             )
         return result
 
+    def get_video_id(youtube_url):
+    # 使用正则表达式提取视频 ID
+        pattern = r'(?:v=|\/)([0-9A-Za-z_-]{11}).*'
+        match = re.search(pattern, youtube_url)
+        return match.group(1) if match else None 
+
+    def get_video_data(self,youtube_url):
+        video_id = YoutubeData.get_video_id(youtube_url)
+        if video_id:
+            # 获取视频的相关信息
+            request = self.youtube.videos().list(
+                part='snippet,contentDetails,statistics',
+                id=video_id
+            )
+            response = request.execute()
+
+            # 打印视频信息
+            if response['items']:
+                video = response['items'][0]
+                title = video['snippet']['title']
+                description = video['snippet']['description']
+                tags = video['snippet'].get('tags', [])
+                thumbnails = video['snippet']['thumbnails']
+                
+                # 获取不同尺寸的缩略图 URL
+                # default_thumbnail = thumbnails.get('default', {}).get('url')
+                # medium_thumbnail = thumbnails.get('medium', {}).get('url')
+                high_thumbnail = thumbnails.get('high', {}).get('url')
+                # print("\n訊息:")
+                # print(f'Title: {title}')
+                # print(f'Description: {description}')
+                # print(f'Tags: {tags}')
+                # print(f'Default Thumbnail: {default_thumbnail}')
+                # print(f'Medium Thumbnail: {medium_thumbnail}')
+                # print(f'High Thumbnail: {high_thumbnail}')
+                return {
+                    "yt_title":title,
+                    "tags":tags,
+                    "img_url":high_thumbnail
+                }
+            else:
+                return None
+        else:
+            return None      

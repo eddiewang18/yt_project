@@ -37,7 +37,7 @@ class MyUser(AbstractBaseUser,PermissionsMixin):
     objects = MyUserManager()
 
     def __str__(self):
-        return username
+        return self.username
     
     
     

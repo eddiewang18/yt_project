@@ -46,9 +46,9 @@
             <div class="recommendation">
                 <div v-for="(item , index) in ytData.US" class="music_block" :id="item.video_id">
                     <img :src="item.img" alt="">
-                    <a :href="item.video_url" target="_blank"><font-awesome-icon :icon="['fas', 'paperclip']" style="color: #ffffff;" /></a>
+                    <a :id="'US@a@'+index" :href="item.video_url" target="_blank"><font-awesome-icon :icon="['fas', 'paperclip']" style="color: #ffffff;" /></a>
                     <span class="music_title">{{item.title}}</span>
-                    <button><font-awesome-icon :icon="['fas', 'copy']"  style="color: #ffffff;" /></button>
+                    <button :id="'US@btn@'+index" @click="copyLink"><font-awesome-icon :icon="['fas', 'copy']"  style="color: #ffffff;" /></button>
                 </div>
             </div>
             <div class="sub_title">
@@ -57,9 +57,9 @@
             <div class="recommendation">
                 <div v-for="(item , index) in ytData.JP" class="music_block" :id="item.video_id">
                     <img :src="item.img" alt="">
-                    <a :href="item.video_url" target="_blank"><font-awesome-icon :icon="['fas', 'paperclip']" style="color: #ffffff;" /></a>
+                    <a :id="'JP@a@'+index" :href="item.video_url" target="_blank"><font-awesome-icon :icon="['fas', 'paperclip']" style="color: #ffffff;" /></a>
                     <span class="music_title">{{item.title}}</span>
-                    <button><font-awesome-icon :icon="['fas', 'copy']"  style="color: #ffffff;" /></button>
+                    <button :id="'JP@btn@'+index" @click="copyLink"><font-awesome-icon :icon="['fas', 'copy']"  style="color: #ffffff;" /></button>
                 </div>
             </div>
             <div class="sub_title">
@@ -68,9 +68,9 @@
             <div class="recommendation">
                 <div v-for="(item , index) in ytData.KR" class="music_block" :id="item.video_id">
                     <img :src="item.img" alt="">
-                    <a :href="item.video_url" target="_blank"><font-awesome-icon :icon="['fas', 'paperclip']" style="color: #ffffff;" /></a>
+                    <a :id="'KR@a@'+index" :href="item.video_url" target="_blank"><font-awesome-icon :icon="['fas', 'paperclip']" style="color: #ffffff;" /></a>
                     <span class="music_title">{{item.title}}</span>
-                    <button><font-awesome-icon :icon="['fas', 'copy']"  style="color: #ffffff;" /></button>
+                    <button :id="'KR@btn@'+index" @click="copyLink"><font-awesome-icon :icon="['fas', 'copy']"  style="color: #ffffff;" /></button>
                 </div>
             </div>
 
@@ -79,7 +79,7 @@
 </div>
 <button @click="scrollUp" class="fab"><font-awesome-icon :icon="['fas', 'arrow-up']" style="color: #ffffff;" /></button>
 
-<div id="loadingMsg" class="hide">請稍後，正在轉檔中...</div>
+<div id="loadingMsg" class="hide">{{emergeMsg}}</div>
 <modal :msg="msg" :dynamicStatusClass :successFlag="successFlag" ref="msgModal"></modal>
 </template>
 
@@ -102,6 +102,7 @@ let msgModal = ref(null); // 指向 modal組件
 let msg = ref(""); // modal 訊息
 let dynamicStatusClass = ref("");
 let successFlag = ref("");
+let emergeMsg = ref("");
 const api_url = "http://127.0.0.1:8000/basic/home/";
 let ytData = reactive({});
 const router = useRouter();
@@ -110,8 +111,10 @@ getData()
 let loginStatus = ref(localStorage.getItem("login"))
 let access_token = localStorage.getItem("access_token")
 let username = ref("");
+let email = ref("")
 if (access_token != null && getUsernameFromToken(access_token) != null) { 
     username.value = getUsernameFromToken(access_token)[0]
+    email.value = getEmailFromToken(access_token)
 }
 // Youtube轉檔
 async function convertAudio(fileType) {
@@ -123,18 +126,17 @@ async function convertAudio(fileType) {
         return;
     }
     let loadingMsg = document.getElementById("loadingMsg");
-    console.log("=======convertAudio=======")
+    emergeMsg.value = "請稍後，正在轉檔中..."
     loadingMsg.classList.remove("hide");
     loadingMsg.classList.add("show");
     
     let req_data = {
         yt_link: yt_link.value,
-        fileType:fileType
+        fileType: fileType,
+        email: email.value
     }
     try {
         const response = await axios.post(api_url, req_data, { responseType: 'blob' });
-        console.log("response ======> ok")
-        console.log(response)
         // 當接收到前端回傳的檔案時，進行瀏覽器自動下載的動作
         // 當接收到前端回傳的檔案時，進行瀏覽器自動下載的動作
         const contentDisposition = response.headers['content-disposition'];
@@ -148,10 +150,11 @@ async function convertAudio(fileType) {
         document.body.removeChild(link);
         loadingMsg.classList.remove("show");
         loadingMsg.classList.add("hide");
+        emergeMsg.value = "";
     } catch (error) {
-        console.log("error=>" + error);
         loadingMsg.classList.remove("show");
         loadingMsg.classList.add("hide");
+        emergeMsg.value = "";
         msg.value = "請檢查youtube連結是否正確"
         dynamicStatusClass.value = 'fail';
         successFlag.value = false;
@@ -173,7 +176,6 @@ async function getData() {
 
 function copyLink(e) {
     let btn_ele = null;
-    console.log("target=>"+e.target.tagName)
     if (e.target.tagName.toLowerCase() === 'path') {
         btn_ele = e.target.parentNode.parentNode;
     }
@@ -182,14 +184,12 @@ function copyLink(e) {
     } else if (e.target.tagName.toLowerCase() === 'button') {
         btn_ele = e.target;
     }
-    console.log("tagName =>"+btn_ele)
     let btn_id = btn_ele.id;
     if (btn_id != undefined && btn_id != null) {
         let id_data_list = btn_id.split("@");
         let a_id = id_data_list[0] + "@a@" + id_data_list[2];
         let a_ele = document.getElementById(a_id);
         let textToCopy = a_ele.href.trim();
-        console.log('textToCopy==>'+textToCopy)
         // 創建一個臨時的textarea元素來複製文字
         var tempTextarea = document.createElement('textarea');
         tempTextarea.value = textToCopy;
@@ -212,7 +212,6 @@ function scrollUp(params) {
 // 登出
 
 function logout() {
-    console.log('logout')
     localStorage.removeItem('login')
     localStorage.removeItem('access_token')
     localStorage.removeItem('refresh_token')
@@ -246,6 +245,11 @@ function parseJwt(token) {
 function getUsernameFromToken(token) {
   const payload = parseJwt(token);
   return payload ? payload.username : null;
+}
+
+function getEmailFromToken(token) {
+    const payload = parseJwt(token);
+  return payload ? payload.email : null;
 }
 
 </script>
