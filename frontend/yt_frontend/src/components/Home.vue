@@ -1,7 +1,8 @@
 <template>
     <div class="head_icon"><RouterLink to="/"><font-awesome-icon :icon="['fas', 'house']" class="fa-2x" style="color: #6099fb;" /></RouterLink> </div>
-    <span v-if="loginStatus" class="username">{{ username }}</span>
-<div class="container">
+    <!-- <span v-if="loginStatus" class="username"><span class="username_txt">{{ username }}</span></span> -->
+    <span v-if="loginStatus" class="circle">{{ username }}</span>
+    <div class="container">
 
     <div class="header">
 
@@ -537,24 +538,35 @@ a{
 span.username{
     margin: 0px 30px 0px 0px;
     background-color: rgb(213, 29, 103);
-    padding: 20px;
     color: #ffffff;
     font-size: 20px;
-
+    width: 50px;
+    height: 50px;
     border-radius: 50%;
 }
+
+.username_txt{
+    text-align: center;
+    padding: 20px;
+    margin: -50% -180%;
+
+}
+
 .head_icon{
     margin: 10px 20px 0px 10px;
 }
 
-.username{
+.circle {
+    float: right;
+    width: 50px;
+    height: 50px;
     background-color: rgb(213, 29, 103);
-    padding: 20px;
-    color: #ffffff;
-    font-size: 16px;
     border-radius: 50%;
-    position: absolute;
-    right: 0px;
-    top: 10px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: white;
+    font-size: 16px;
+    margin: -40px 10px 0px 0px;
 }
 </style>
