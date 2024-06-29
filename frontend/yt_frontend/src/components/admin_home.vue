@@ -15,13 +15,14 @@
         </div>
         <div class="func">
             <!--.func為功能-->
-            <RouterLink to="/admin/home/analysis01">影音報表</RouterLink>
-            
+            <RouterLink to="/admin/home/analysis02">用戶分析</RouterLink>
         </div>
         <div class="func">
             <!--.func為功能-->
-            <RouterLink >標籤報表</RouterLink>
+            <RouterLink to="/admin/home/analysis01">影音報表</RouterLink>
+            
         </div>
+
         <div class="func">
             <!--.func為功能-->
             <RouterLink >帳號管理</RouterLink>
